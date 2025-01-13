@@ -61,26 +61,27 @@ app.get('/', (req, res) => {
 
 // Add the /api/ships endpoint
 app.get('/api/ships', async (req, res) => {
-  const { mmsi } = req.query;
-
-  if (!mmsi) {
-    return res.status(400).json({ error: 'MMSI is required as a query parameter.' });
-  }
-
-  try {
-    const response = await axios.get('https://stream.aisstream.io/v0/positions', {
-      headers: {
-        Authorization: `Bearer ${AIS_API_KEY}`,
-      },
-      params: { mmsi },
-    });
-
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error fetching data from AISstream:', error.message);
-    res.status(500).json({ error: 'Failed to fetch data from AISstream.' });
-  }
-});
+    const { mmsi } = req.query;
+  
+    if (!mmsi) {
+      return res.status(400).json({ error: 'MMSI is required as a query parameter.' });
+    }
+  
+    try {
+      const response = await axios.get('https://stream.aisstream.io/v0/positions', {
+        headers: {
+          Authorization: `Bearer ${AIS_API_KEY}`,
+        },
+        params: { mmsi },
+      });
+  
+      res.json(response.data);
+    } catch (error) {
+      console.error('Error fetching data from AISstream:', error.response?.data || error.message);
+      res.status(500).json({ error: 'Failed to fetch data from AISstream.', details: error.response?.data || error.message });
+    }
+  });
+  
 
 // Endpoint to serve the frontend (e.g., your map application)
 app.use(express.static('public'));
