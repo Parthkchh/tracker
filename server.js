@@ -1,24 +1,38 @@
 const express = require("express");
 const axios = require("axios");
+
 const app = express();
+const PORT = process.env.PORT || 3000; // Render will set this environment variable
 
-const AISSTREAM_API_KEY = "your-aisstream-api-key"; // Replace with your actual API key
-
+// Route for fetching AISstream ship data
 app.get("/api/ships", async (req, res) => {
+  const { mmsi } = req.query;
+
+  if (!mmsi) {
+    return res.status(400).json({ error: "MMSI is required as a query parameter." });
+  }
+
   try {
-    const response = await axios.get("https://api.aisstream.io/v1/live", {
+    const response = await axios.get("https://api.aisstream.io/v1/positions", {
       headers: {
-        Authorization: `Bearer ${AISSTREAM_API_KEY}`,
+        Authorization: `Bearer ${process.env.AISSTREAM_API_KEY}`, // Use the environment variable for the API key
       },
-      params: {
-        mmsi: req.query.mmsi, // Pass MMSI as query parameter
-      },
+      params: { mmsi },
     });
+
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: "Error fetching AIS data" });
+    console.error(error.message);
+    res.status(500).json({ error: "Failed to fetch data from AISstream." });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Root route for testing the server
+app.get("/", (req, res) => {
+  res.send("AISstream Proxy Server is running!");
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
